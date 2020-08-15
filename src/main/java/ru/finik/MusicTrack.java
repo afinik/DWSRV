@@ -1,3 +1,5 @@
+package ru.finik;
+
 public class MusicTrack {
     //имя трека
     private String name;

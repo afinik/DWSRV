@@ -1,3 +1,5 @@
+package ru.finik;
+
 public interface GeneralNames {
     //номер сессии
     int numberOfSession = 0;

@@ -1,3 +1,5 @@
+package ru.finik;
+
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -22,7 +24,7 @@ public class TCPConnection {
         rxThread = new Thread(new Runnable() {
             public void run() {
                 try {
-                    eventListener.onConnectionReady(TCPConnection.this); //TCPConnection.this -
+                    eventListener.onConnectionReady(TCPConnection.this); //ru.finik.TCPConnection.this -
                     // хитрая конструкция, в которой вызываем this того, что уровнем выше
                     // ниже пока поток не прерван (его можно прервать снаружи) мы получаем строчку и отдаем его eventlisteneru
                     while (!rxThread.isInterrupted()) {
@@ -72,6 +74,6 @@ public class TCPConnection {
 
     @Override
     public String toString() {
-        return "TCPConnection: " + socket.getInetAddress() + ": " + socket.getPort();
+        return "ru.finik.TCPConnection: " + socket.getInetAddress() + ": " + socket.getPort();
     }
 }

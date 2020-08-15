@@ -1,3 +1,5 @@
+package ru.finik;
+
 public interface TCPConnectionListener {
 
     void onConnectionReady(TCPConnection tcpConnection);

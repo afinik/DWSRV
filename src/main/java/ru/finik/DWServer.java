@@ -1,4 +1,4 @@
-/*version server s0.001*/
+package ru.finik;/*version server s0.001*/
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class ChatServer implements TCPConnectionListener {
+public class DWServer implements TCPConnectionListener {
 
     //if id doesn't exist - create a new session
 
@@ -22,12 +22,12 @@ public class ChatServer implements TCPConnectionListener {
 
 
     public static void main(String[] args) {
-        new ChatServer();
+        new DWServer();
     }
 
     private final ArrayList<TCPConnection> connections = new ArrayList<>();
 
-    private ChatServer() {
+    private DWServer() {
         System.out.println("С31 Server running...");
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
@@ -35,7 +35,7 @@ public class ChatServer implements TCPConnectionListener {
                     new TCPConnection(this, serverSocket.accept());
                 } catch (IOException e) {
 
-                    System.out.println("С38 TCPConnection exception: " + e);
+                    System.out.println("С38 ru.finik.TCPConnection exception: " + e);
                 }
             }
         } catch (IOException e) {
@@ -70,7 +70,7 @@ public class ChatServer implements TCPConnectionListener {
     @Override
     public synchronized void onException(TCPConnection tcpConnection, Exception e) {
         System.out.println("C72 Smth. closed - onException");
-        System.out.println("С73 TCPConnection exception: " + e);
+        System.out.println("С73 ru.finik.TCPConnection exception: " + e);
     }
 
     private void sentAllConnection(String value, TCPConnection tcpConnection) {
