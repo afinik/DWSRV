@@ -51,11 +51,11 @@ public class TCPConnection {
     //синхронизируем,чтобы безопасно обращаться можно было из разных потоков
     public synchronized void sendString(String value) {
         try {
-//            System.out.println(value);
+//            logd(value);
             out.write(value);
             out.flush();
             out.close();
-//            System.out.println("Отправили сообщение - T56");
+//            logd("Отправили сообщение - T58");
             disconnect();
         } catch (IOException e) {
             eventListener.onException(TCPConnection.this, e);

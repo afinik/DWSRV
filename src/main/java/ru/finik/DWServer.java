@@ -1,10 +1,12 @@
 package ru.finik;/*version server s0.001*/
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import static ru.finik.Log.logd;
 
 public class DWServer implements TCPConnectionListener {
 
@@ -28,14 +30,14 @@ public class DWServer implements TCPConnectionListener {
     private final ArrayList<TCPConnection> connections = new ArrayList<>();
 
     private DWServer() {
-        System.out.println("С31 Server running...");
+        logd("С31 Server running...");
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
                 try {
                     new TCPConnection(this, serverSocket.accept());
                 } catch (IOException e) {
 
-                    System.out.println("С38 ru.finik.TCPConnection exception: " + e);
+                    logd("С38 ru.finik.TCPConnection exception: " + e);
                 }
             }
         } catch (IOException e) {
@@ -48,7 +50,7 @@ public class DWServer implements TCPConnectionListener {
     @Override
     public synchronized void onConnectionReady(TCPConnection tcpConnection) {
         connections.add(tcpConnection);
-        //System.out.println("connections.size())=" + connections.size());
+        //logd("connections.size())=" + connections.size());
         // sentAllConnection("Client connected: " + tcpConnection);
     }
 
@@ -69,14 +71,15 @@ public class DWServer implements TCPConnectionListener {
 
     @Override
     public synchronized void onException(TCPConnection tcpConnection, Exception e) {
-        System.out.println("C72 Smth. closed - onException");
-        System.out.println("С73 ru.finik.TCPConnection exception: " + e);
+        logd("C76 Smth. closed - onException");
+        logd("С77 ru.finik.TCPConnection exception: " + e);
     }
 
     private void sentAllConnection(String value, TCPConnection tcpConnection) {
         //и тут нашу строку получаем
         //первые 5 символов
 //        ConcurrentHashMap concurrentHashMap
+//        log.info("Строка84");
         if (value != null && value.length() > 6)
 //        clientsConnections.put (value, connections.get(connections.size() - 1));
             switch (value.substring(0, 5)) {
@@ -85,7 +88,7 @@ public class DWServer implements TCPConnectionListener {
                 case "hcode":
                     String hcClient = value.substring(8, 42);
                     int duration = Integer.parseInt(value.substring(value.lastIndexOf("/") + 1));
-                    System.out.println("С88 Новый клиент id = " + hcClient);
+                    logd("С93 Новый клиент id = " + hcClient);
                     isExist = false;
 //                    clientIds.add(hcClient);
                     //надо добавить в мэп это и коннекшн - не обязательно пока - надо понять надо ли
@@ -115,7 +118,7 @@ public class DWServer implements TCPConnectionListener {
                 case "Start":
                     //сюда отправляется "Start = " + duration
                     int dur1 = Integer.parseInt(value.substring(8));
-                    System.out.println("С117 Запрос на старт композиции с длиной (мс)" + dur1);
+                    logd("С123 Запрос на старт композиции с длиной (мс)" + dur1);
 
 //                    if (sessions != null)
                         for (Session s : sessions) {
@@ -134,8 +137,8 @@ public class DWServer implements TCPConnectionListener {
                                 //if session is not active (not started before)
                                 if(!s.isActive()) {
                                     s.setActive(true);
-                                    System.out.println("C136: " + System.currentTimeMillis());
-                                    System.out.println("C137: " + s.getStartTime());
+                                    logd("C136: " + System.currentTimeMillis());
+                                    logd("C137: " + s.getStartTime());
 
 
                                     //we are calculate a difference between startTime and currentTime
@@ -146,7 +149,7 @@ public class DWServer implements TCPConnectionListener {
 
                                 }
                                 deltaTime = System.currentTimeMillis() - startTime;
-                                System.out.println("C148: " + deltaTime);
+                                logd("C148: " + deltaTime);
                                 //if the difference between their is smaller than duration of music file
                                 // we send deltaTime to the client
                                 if (deltaTime < dur1) tcpConnection.sendString("curtime" + "/" + deltaTime);
@@ -155,6 +158,7 @@ public class DWServer implements TCPConnectionListener {
 //                                    s.setActive(false);
 //                                TODO обработать команду Stop на клиенте, поступающую с сервера на клиент
                                     tcpConnection.sendString("Stop");
+                                    logd("text111");
                                     sessions.remove(s);
                                 }
                                 break;
@@ -166,7 +170,7 @@ public class DWServer implements TCPConnectionListener {
 
                 default:
                     if (value.length() > 8)
-                        System.out.println("С180 Отладка:" + value);
+                        logd("С180 Отладка:" + value);
                     break;
             }
     }
