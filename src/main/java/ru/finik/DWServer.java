@@ -3,6 +3,7 @@ package ru.finik;/*version server s0.001*/
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +22,11 @@ public class DWServer implements TCPConnectionListener {
     private Map<String, TCPConnection> clientsConnections;
     private List<Integer> currentTimeOfSessions = new ArrayList<>();
     private static List<Session> sessions = new ArrayList<>();
+    public String hcClient;
+    public HashMap<String, Integer> clientHashNumber;
+    public ArrayList<Integer> clientNumber;
+    private int lastNumber;
+    private String stringNewClient;
 
 
     public static void main(String[] args) {
@@ -30,14 +36,15 @@ public class DWServer implements TCPConnectionListener {
     private final ArrayList<TCPConnection> connections = new ArrayList<>();
 
     private DWServer() {
-        logd("С31 Server running...");
+        clientHashNumber = new HashMap<>();
+        logd("С39 Server running...");
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
                 try {
                     new TCPConnection(this, serverSocket.accept());
                 } catch (IOException e) {
 
-                    logd("С38 ru.finik.TCPConnection exception: " + e);
+                    logd("С46 ru.finik.TCPConnection exception: " + e);
                 }
             }
         } catch (IOException e) {
@@ -71,8 +78,8 @@ public class DWServer implements TCPConnectionListener {
 
     @Override
     public synchronized void onException(TCPConnection tcpConnection, Exception e) {
-        logd("C76 Smth. closed - onException");
-        logd("С77 ru.finik.TCPConnection exception: " + e);
+        logd("C80 Smth. closed - onException");
+        logd("С81 ru.finik.TCPConnection exception: " + e);
     }
 
     private void sentAllConnection(String value, TCPConnection tcpConnection) {
@@ -86,47 +93,41 @@ public class DWServer implements TCPConnectionListener {
                 //инициализация листа клиентов
                 //посылается с клиента до нажатия на кпонку "выбрать файл"
                 case "hcode":
-                    String hcClient = value.substring(8, 42);
+                    //номер клиента еще не сформирован - получаем только хэш - отправляем номер
+                    hcClient = value.substring(8, 42);
+//                    clientHashNumber.put("22", "22");
+                    int tempNum = clientNumber(hcClient);
                     int duration = Integer.parseInt(value.substring(value.lastIndexOf("/") + 1));
-                    logd("С93 Новый клиент id = " + hcClient);
+                    logd("С101 " + stringNewClient + "номер " + tempNum);
+
                     isExist = false;
 //                    clientIds.add(hcClient);
                     //надо добавить в мэп это и коннекшн - не обязательно пока - надо понять надо ли
 //                    if (sessions != null)
                         for (Session s : sessions) {
-                        //если сессия не существует
-                        // Тут пропишем еще и sesid в будущем
+                        //Сравниваем длину композиции в сессии с тем, что пришло с клиента
+                        //TODO В будущем сравниваем не только длину, но и специальный код, который участники
+                        //TODO узнают непосредственно перед мероприятием (во избежании фальстарта)
                         if (s.getDuration() == duration) {
                             isExist = true;
-                            //Здесь будем вычислять номер сессии и посылать ее клиенту
-                            // будет мэп (номер сессии, экземпляр сессии
-                            // в дальнейшем клиент будет посылать номер сессии, а не размер
-                            // плейлиста/мелодии в миллисекундах
                             break;
                         }
                     }
                     if (!isExist) addSession(duration);
-                    tcpConnection.sendString("num" + "/" + duration);
+                    tcpConnection.sendString("clNum" + "/" + tempNum);
                     isExist = false;
-
-                    //TODO если в листе такого id нет
-                    // то добавляем такой id. Если же
-                    // есть, прибавляем 1 к количеству подключившихся
-                    // а вопрос, как сделать чтобы два раза одного не считало.
-                    // Как идентифицировать пользователя и знать, что он не отключился
                     break;
                 case "Start":
+                    String tempStr = value.substring(8, value.lastIndexOf("/"));
                     //сюда отправляется "Start = " + duration
-                    int dur1 = Integer.parseInt(value.substring(8));
-                    logd("С123 Запрос на старт композиции с длиной (мс)" + dur1);
+//                    logd("Start!!!! clnum=" + tempStr);
+                    int dur1 = Integer.parseInt(value.substring(value.lastIndexOf("/") + 1));
+                    logd(tempStr + "","С125 Запрос на старт композиции с длиной (мс)" + dur1);
 
 //                    if (sessions != null)
                         for (Session s : sessions) {
-                        //если сессия не существует
-                        // TODO Тут пропишем еще и sesid в будущем
-                        //если существует - стартует время
-                        //reset boolean isExist
 
+                           // logd(clientNumber(hcClient) + "","Сессия не существует");
                             isExist = false;
                             if (s.isExist(dur1)) {
                                 //we found the session and isExist (boolean but not void!
@@ -137,8 +138,8 @@ public class DWServer implements TCPConnectionListener {
                                 //if session is not active (not started before)
                                 if(!s.isActive()) {
                                     s.setActive(true);
-                                    logd("C136: " + System.currentTimeMillis());
-                                    logd("C137: " + s.getStartTime());
+                                    logd(clientNumber(hcClient) + "","C151: " + System.currentTimeMillis());
+                                    logd("C142: " + s.getStartTime());
 
 
                                     //we are calculate a difference between startTime and currentTime
@@ -149,7 +150,7 @@ public class DWServer implements TCPConnectionListener {
 
                                 }
                                 deltaTime = System.currentTimeMillis() - startTime;
-                                logd("C148: " + deltaTime);
+                                logd("C152: " + deltaTime);
                                 //if the difference between their is smaller than duration of music file
                                 // we send deltaTime to the client
                                 if (deltaTime < dur1) tcpConnection.sendString("curtime" + "/" + deltaTime);
@@ -158,7 +159,7 @@ public class DWServer implements TCPConnectionListener {
 //                                    s.setActive(false);
 //                                TODO обработать команду Stop на клиенте, поступающую с сервера на клиент
                                     tcpConnection.sendString("Stop");
-                                    logd("text111");
+                                    logd("C162 Клиент видимо вылетел. Номер клиента "  + clientNumber);
                                     sessions.remove(s);
                                 }
                                 break;
@@ -169,8 +170,9 @@ public class DWServer implements TCPConnectionListener {
                     break;
 
                 default:
+                    //обнаружен запуск только вначале
                     if (value.length() > 8)
-                        logd("С180 Отладка:" + value);
+                        logd("С188 Отладка: " + value);
                     break;
             }
     }
@@ -189,5 +191,24 @@ public class DWServer implements TCPConnectionListener {
 
     }
 
+    private Integer clientNumber(String hcClient){
+//        logd("хэш: " + hcClient);
+        for (Map.Entry entry: clientHashNumber.entrySet()) {
+            //Если находим такой хэш, то
+//            logd("(for _ lastNumber = " + lastNumber);
+//            logd("хэш " + hcClient + " уже есть");
+            stringNewClient = "Клиент подсоединился вновь - ";
+            if (entry.getKey().equals(hcClient)){
+                return (Integer) entry.getValue();
+
+            }
+        }
+//        logd("хэша " + hcClient + " нет");
+        stringNewClient = "Новый клиент подсоединился. Хэш " + hcClient + ". Клиенту выдан ";
+        lastNumber = lastNumber + 1;
+        clientHashNumber.put(hcClient, lastNumber);
+//        logd("lastNumber = " + lastNumber);
+        return lastNumber;
+    }
 
 }
